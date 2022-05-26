@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>第一个three.js文件_WebGL三维场景</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      /* 隐藏body窗口区域滚动条 */
+    }
+  </style>
+  <!--引入three.js三维引擎-->
+  <script src="./js/threejsR92/build/three.js"></script>
+  <script src="./js/controls/OrbitControls.js"></script>
+  <!-- <script src="http://www.yanhuangxueyuan.com/threejs/build/three.js"></script> -->
+</head>
+
+<body>
+  <script>
+    /**
+     * 创建场景对象Scene
+     */
+    var scene = new THREE.Scene();
+    /**
+     * 创建网格模型
+     */
+     // 河南边界轮廓坐标
+// let arr = [
+//   [110.3906, 34.585],
+//   [110.8301, 34.6289],
+//   [110.6543, 34.1455],
+//   [110.4785, 34.2334],
+//   [110.3906, 34.585]
+// ]
+const loader = new THREE.FileLoader()
+loader.load('./json/china.json', (data) => {
+  const jsondata = JSON.parse(JSON.stringify(data))
+  console.log(jsondata,'jsondata')
+  var points = [];
+  // 转化为Vector2构成的顶点数组
+  jsondata.forEach(elem => {
+    points.push(new THREE.Vector2(elem[0],elem[1]))
+  });
+})
+// 样条曲线生成更多的点
+var SplineCurve = new THREE.SplineCurve(points)
+var shape = new THREE.Shape(SplineCurve.getPoints(300));
+// var shape = new THREE.Shape(points);
+var geometry = new THREE.ShapeGeometry(shape);
+geometry.center();//几何体居中
+geometry.scale(30,30,30);//几何体缩放
+var material = new THREE.MeshPhongMaterial({
+  color: 0x0000ff,
+  side: THREE.DoubleSide //两面可见
+}); //材质对象
+var mesh = new THREE.Mesh(geometry, material); //网格模型对象
+      scene.add(mesh);
+    /**
+     * 光源设置
+     */
+    //点光源
+    var point = new THREE.PointLight(0xffffff);
+    point.position.set(400, 200, 300); //点光源位置
+    scene.add(point); //点光源添加到场景中
+    //环境光
+    var ambient = new THREE.AmbientLight(0x444444);
+    scene.add(ambient);
+    // console.log(scene)
+    // console.log(scene.children)
+    /**
+     * 相机设置
+     */
+    var width = window.innerWidth; //窗口宽度
+    var height = window.innerHeight; //窗口高度
+    var k = width / height; //窗口宽高比
+    var s = 200; //三维场景显示范围控制系数，系数越大，显示的范围越大
+    //创建相机对象
+    var camera = new THREE.OrthographicCamera(-s * k, s * k, s, -s, 1, 1000);
+    camera.position.set(20, 300, 200); //设置相机位置
+    camera.lookAt(scene.position); //设置相机方向(指向的场景对象)
+    /**
+     * 创建渲染器对象
+     */
+    var renderer = new THREE.WebGLRenderer();
+    renderer.setSize(width, height);//设置渲染区域尺寸
+    renderer.setClearColor(0xb9d3ff, 1); //设置背景颜色
+    document.body.appendChild(renderer.domElement); //body元素中插入canvas对象
+    //执行渲染操作   指定场景、相机作为参数
+    //renderer.render(scene, camera);
+    // 渲染函数
+    function render() {
+      renderer.render(scene,camera);//执行渲染操作
+      requestAnimationFrame(render);//请求再次执行渲染函数render
+    }
+    render();
+    var controls = new THREE.OrbitControls(camera,renderer.domElement);//创建控件对象
+    //controls.addEventListener('change', render);//监听鼠标、键盘事件
+
+    // 球体网格模型创建函数
+    function sphereMesh(R, x, y, z) {
+      var geometry = new THREE.SphereGeometry(R, 25, 25); //球体几何体
+      var material = new THREE.MeshPhongMaterial({
+        color: 0x0000ff
+      }); //材质对象Material
+      var mesh = new THREE.Mesh(geometry, material); // 创建网格模型对象
+      mesh.position.set(x, y, z);
+      return mesh;
+    }
+    // 圆柱体网格模型创建函数
+    function cylinderMesh(R, h, x, y, z) {
+      var geometry = new THREE.CylinderGeometry(R, R, h, 25, 25); //球体几何体
+      var material = new THREE.MeshPhongMaterial({
+        color: 0x0000ff
+      }); //材质对象Material
+      var mesh = new THREE.Mesh(geometry, material); // 创建网格模型对象
+      mesh.position.set(x, y, z);
+      return mesh;
+    }
+  </script>
+</body>
+</html>

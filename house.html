@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>第一个three.js文件_WebGL三维场景</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      /* 隐藏body窗口区域滚动条 */
+    }
+    #3dAPP{width:100%;height:100%;text-align: center;}
+    canvas{margin:0 auto;}
+  </style>
+  <!--引入three.js三维引擎-->
+  <script src="http://www.yanhuangxueyuan.com/versions/threejsR92/build/three.js"></script>
+  <script src="http://www.yanhuangxueyuan.com/versions/threejsR92/examples/js/controls/OrbitControls.js"></script>
+  <!-- <script src="./three.js"></script> -->
+  <!-- <script src="http://www.yanhuangxueyuan.com/threejs/build/three.js"></script> -->
+</head>
+
+<body>
+<div id="3dAPP"></div>
+
+  <script>
+    var scene,camera,renderer,controls;
+    var fh =2,wallHeights=12,wallWeights=1,angle=0,roam=false,test='改变相机位置'
+    // 初始化场景
+    function initScene() {
+      scene = new THREE.Scene();
+    }
+    // 初始化相机
+    function initCamera(w = 500, h = 500) {
+      let cameras = new THREE.PerspectiveCamera(45, w / h, 0.1, 10000);
+      cameras.position.set(100, 100, 100);
+      cameras.lookAt(100, -200, 800);
+      camera = cameras
+    }
+    function initRenderer(w = 500, h = 500) {
+      renderer = new THREE.WebGLRenderer({
+        antialias: true
+      });
+      renderer.setSize(w, h);
+      renderer.setClearColor(0x4682B4, 1.0);
+
+      document.getElementById("3dAPP").appendChild(renderer.domElement);
+      renderer = renderer
+    }
+    // 初始化灯光
+    function initLight() {
+      var directionalLight = new THREE.DirectionalLight(0xffffff, 1); // 模拟远处类似太阳的光源
+      directionalLight.color.setHSL(0.1, 1, 0.95);
+      directionalLight.position.set(0, 200, 0).normalize();
+      scene.add(directionalLight);
+      var ambient = new THREE.AmbientLight(0xffffff, 1); // AmbientLight 影响整个场景的光源
+      ambient.position.set(0, 0, 0);
+      scene.add(ambient);
+    }
+    // 初始化轨迹球控件  鼠标控件
+    function initControls() {
+      let controls1 = new THREE.OrbitControls(camera, renderer.domElement);
+      controls1.enableDamping = true;
+      controls1.dampingFactor = 0.5;
+      // 视角最小距离
+      controls1.minDistance = 0;
+      // 视角最远距离
+      controls1.maxDistance = 5000;
+      controls1.enableKeys = true;
+      // 最大角度
+      // controls.maxPolarAngle = Math.PI / 2;
+      controls1.target = new THREE.Vector3(10, 10, 10);
+      controls = controls1
+      console.log(controls)
+    }
+
+    // 地面
+    function createFloor() {
+      var loader = new THREE.TextureLoader();
+      var floor, floor1;
+      loader.load("https://img0.baidu.com/it/u=1213672382,3941532513&fm=253&fmt=auto&app=138&f=JPEG?w=580&h=383", (texture) => {
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(30, 30);
+        var floorGeometry = new THREE.BoxGeometry(100, 100, fh);
+        var floorMaterial = new THREE.MeshBasicMaterial({
+          map: texture,
+        });
+        floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.set(0, 0, 0)
+        floor.name = "地面";
+        scene.add(floor);
+      });
+    }
+    /**
+     * @param i  某一块墙  
+     * @param wallHeight 墙高  
+     * 
+     */
+    function createwall(i, width = 100, wallHeight = wallHeights, wallWeight = wallWeights) {
+      var Geometry = new THREE.BoxGeometry(width, wallHeight, wallWeight);
+      var mtl = []
+      for (let i = 0; i < Geometry.faces.length; i++) {
+        mtl.push(
+          new THREE.MeshBasicMaterial({
+            color: new THREE.Color(Math.random() * 0xffffff)
+          })
+        )
+      }
+      var mesh = new THREE.Mesh(Geometry, mtl)
+
+      /*
+        刚好在地面
+        模型自身高度 h0
+        地面高度 h1
+        (地面高度 + 模型高度) / 2  即 (h0+h1)/2
+      */
+      mesh.name = `wall${i}`
+      switch (i) {
+        case 1:
+          mesh.position.set(0, (fh + wallHeight) / 2, 24.5)
+          break;
+        case 2:
+          mesh.position.set(0, (fh + wallHeight) / 2, -24.5)
+          break;
+        case 3:
+          mesh.rotation.y = Math.PI / 2
+          mesh.position.set(41.5, (fh + wallHeight) / 2, 0)
+          break;
+        case 4:
+          mesh.rotation.y = Math.PI / 2
+          mesh.position.set(-41.5, (fh + wallHeight) / 2, 0)
+          break;
+        case 5:
+          mesh.rotation.y = Math.PI / 2
+          mesh.position.set(-24, (fh + wallHeight) / 2, 0)
+          break;
+        case 6:
+          mesh.position.set(-33, (fh + wallHeight) / 2, -2)
+          break;
+        case 7:
+          mesh.rotation.y = Math.PI / 2
+          mesh.position.set(-11, (fh + wallHeight) / 2, -13)
+          break;
+        case 8:
+          mesh.position.set(-17.5, (fh + wallHeight) / 2, -12)
+          break;
+        case 9:
+          mesh.position.set(15, (fh + wallHeight) / 2, -2)
+          break;
+        case 10:
+          mesh.rotation.y = Math.PI / 2
+          mesh.position.set(3, (fh + wallHeight) / 2, -13)
+          break;
+        case 11:
+          mesh.position.set(9, (fh + wallHeight) / 2, -12)
+          break;
+        case 12:
+          mesh.rotation.y = Math.PI / 2
+          mesh.position.set(15, (fh + wallHeight) / 2, -18)
+          break;
+        case 13:
+          mesh.rotation.y = Math.PI / 2
+          mesh.position.set(-11, (fh + wallHeight) / 2, 21)
+          break;
+
+      }
+      scene.add(mesh)
+      // console.log(Geometry)
+    }
+    // 模型
+    function initContent() {
+      createFloor();
+      createwall(1, 84)
+      createwall(2, 84)
+      createwall(3, 50)
+      createwall(4, 50)
+      createwall(5, 50)
+      createwall(6, 18)
+      createwall(7, 23)
+      createwall(8, 13)
+      createwall(9, 53)
+      createwall(10, 23)
+      createwall(11, 13)
+      createwall(12, 13)
+      createwall(13, 8)
+    }
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+      update();
+      if (roam) {
+        angle += 0.005
+        // 重新设置相机位置，相机在XOY平面绕着坐标原点旋转运动
+        camera.position.x = 200 * Math.sin(angle)
+        camera.position.z = 200 * Math.cos(angle)
+        camera.lookAt(0, 0, 0);
+      }
+    }
+
+    // 更新控件
+    function update() {
+      // stats.update();
+      controls.update();
+      //TWEEN.update();
+    }
+
+    function init() {
+      initScene();
+      initCamera();
+      // 初始化渲染器
+      initRenderer(700, 700);
+      // 初始化模型
+      initContent();
+      // 初始化灯光
+      initLight();
+      initControls();
+    }
+
+    // changePOS() {
+    //     camera.position.set(0, 300, 10)
+    //     animate()
+    // }
+    init();
+    animate();
+  </script>
